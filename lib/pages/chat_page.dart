@@ -25,6 +25,9 @@ class _ChatPageState extends State<ChatPage> {
   Stream<QuerySnapshot>? chats;
   TextEditingController messageController = TextEditingController();
   String admin = "";
+  ScrollController scrollController = ScrollController(
+    initialScrollOffset: 9999999,
+  );
 
   @override
   void initState() {
@@ -62,7 +65,7 @@ class _ChatPageState extends State<ChatPage> {
           )
         ],
       ),
-      body: Stack(
+      body: Column(
         children: <Widget>[
           chatMessages(),
           Container(
@@ -113,11 +116,13 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   chatMessages() {
-    return StreamBuilder(
-      stream: chats,
-      builder: (context, AsyncSnapshot snapshot) {
-        return snapshot.hasData
+    return Expanded(
+      child: StreamBuilder(
+        stream: chats,
+        builder: (context, AsyncSnapshot snapshot) {
+          return snapshot.hasData
             ? ListView.builder(
+                controller: scrollController,
                 itemCount: snapshot.data.docs.length,
                 itemBuilder: (context, index) {
                   return MessageTile(
@@ -128,7 +133,8 @@ class _ChatPageState extends State<ChatPage> {
                 },
               )
             : Container();
-      },
+        },
+      ),
     );
   }
 
@@ -141,6 +147,7 @@ class _ChatPageState extends State<ChatPage> {
       };
 
       DatabaseService().sendMessage(widget.groupId, chatMessageMap);
+      scrollController.animateTo(9999999, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       setState(() => messageController.clear());
     }
   }
